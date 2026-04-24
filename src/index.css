@@ -1,0 +1,104 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+  
+  @keyframes spin-slow {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+}
+
+@utility animate-spin-slow {
+  animation: spin-slow 8s linear infinite;
+}
+
+:root {
+  --studio-bg: #000000;
+  --studio-panel: #18181b; /* zinc-900 */
+  --studio-panel-border: #27272a; /* zinc-800 */
+  --studio-subpanel: #09090b; /* zinc-950 */
+  --studio-accent: #2563eb; /* blue-600 */
+  --studio-text-primary: #ffffff;
+  --studio-text-secondary: #a1a1aa; /* zinc-400 */
+  --studio-text-muted: #71717a; /* zinc-500 */
+}
+
+body {
+  background-color: var(--studio-bg);
+  color: var(--studio-text-primary);
+  font-family: var(--font-sans);
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+}
+
+.bento-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  grid-template-rows: repeat(6, 1fr);
+  gap: 1rem;
+}
+
+.bento-card {
+  background-color: var(--studio-panel);
+  border: 1px solid var(--studio-panel-border);
+  border-radius: 1rem;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.bento-inner {
+  background-color: var(--studio-subpanel);
+  border: 1px solid var(--studio-panel-border);
+  border-radius: 0.5rem;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--studio-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--studio-sidebar);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #2a2f3a;
+}
+
+.glass-panel {
+  background: rgba(26, 29, 35, 0.4);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--studio-border);
+}
+
+.neon-glow {
+  box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
+}
+
+@keyframes pulse-slow {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 3s infinite ease-in-out;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
