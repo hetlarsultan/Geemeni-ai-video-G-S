@@ -1,6 +1,6 @@
 import React from 'react';
 import { Generation } from '../types';
-import { Film, ImageIcon, Mic2, Trash2, Download, Share2, X, FolderOpen, UserRound, Clapperboard, Zap, ScanSearch } from 'lucide-react';
+import { Film, ImageIcon, Mic2, Trash2, Download, Share2, X, FolderOpen, UserRound, Clapperboard, Zap, ScanSearch, ArrowLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface GalleryProps {
@@ -32,6 +32,9 @@ export default function Gallery({ onClose, onSelect }: GalleryProps) {
     <div className="flex flex-col h-full bg-black">
       <div className="p-4 border-b border-zinc-800 flex justify-between items-center sticky top-0 bg-black z-10">
         <div className="flex items-center gap-3">
+          <button onClick={onClose} className="p-1 hover:bg-zinc-900 rounded-full transition-colors lg:hidden">
+            <ArrowLeft className="w-5 h-5 text-blue-500" />
+          </button>
           <FolderOpen className="w-5 h-5 text-blue-500" />
           <h2 className="text-sm font-black uppercase tracking-widest text-zinc-200">المعرض / GALLERY</h2>
         </div>

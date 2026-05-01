@@ -1,25 +1,23 @@
 import React from 'react';
-import { ImageIcon, Film, Mic2, PlayCircle, FolderHeart, Settings, Sparkles, Smartphone, MessageSquare, Music, BarChart3, Brain, UserRound, Clapperboard, Zap } from 'lucide-react';
+import { ImageIcon, Film, Mic2, PlayCircle, FolderHeart, Settings, Sparkles, Smartphone, MessageSquare, Music, BarChart3, Brain, UserRound, Clapperboard, Zap, UserCheck } from 'lucide-react';
 import { motion } from 'motion/react';
+import { FIXED_CHARACTERS } from '../constants';
 
 interface DashboardProps {
   onSelectAction: (action: 'image' | 'video' | 'tts' | 'img2vid' | 'chat' | 'music' | 'analysis' | 'reasoning' | 'character' | 'movie' | 'animated-image') => void;
   onOpenGallery: () => void;
 }
 
-export default function Dashboard({ onSelectAction, onOpenGallery }: DashboardProps) {
+const Dashboard = React.memo(({ onSelectAction, onOpenGallery }: DashboardProps) => {
   const actions = [
-    { id: 'image', label: 'إنشاء صورة', icon: ImageIcon, color: 'bg-blue-600', description: 'Nano Banana 2 Generation' },
-    { id: 'video', label: 'فيديو (نص)', icon: Film, color: 'bg-emerald-600', description: 'Veo 3 Cinematic Video' },
-    { id: 'character', label: 'استوديو الشخصيات', icon: UserRound, color: 'bg-blue-500', description: 'Consistent Character Studio' },
-    { id: 'movie', label: 'إنتاج الأفلام', icon: Clapperboard, color: 'bg-purple-600', description: 'Unified Movie Engine' },
+    { id: 'movie', label: 'إنتاج الدراما', icon: Clapperboard, color: 'bg-purple-600', description: 'Story to Action Movie' },
+    { id: 'video', label: 'فيديو سريع', icon: Film, color: 'bg-emerald-600', description: 'Single Shot Generation' },
+    { id: 'character', label: 'استوديو الشخصيات', icon: UserRound, color: 'bg-blue-500', description: 'Actor DNA Matching' },
     { id: 'animated-image', label: 'توليد الحركة', icon: Zap, color: 'bg-amber-600', description: 'Animate Static Assets' },
-    { id: 'tts', label: 'تعليق صوتي', icon: Mic2, color: 'bg-orange-600', description: 'Gemini Natural TTS' },
-    { id: 'img2vid', label: 'صورة إلى فيديو', icon: PlayCircle, color: 'bg-purple-600', description: 'Animate with Veo 3' },
-    { id: 'chat', label: 'دردشة Gemini', icon: MessageSquare, color: 'bg-indigo-600', description: 'Context Aware Chatbot' },
-    { id: 'music', label: 'توليد الموسيقى', icon: Music, color: 'bg-pink-600', description: 'Lyria AI Soundtracks' },
-    { id: 'analysis', label: 'تحليل الفيديو', icon: BarChart3, color: 'bg-cyan-600', description: 'Summarize with Gemini 3.1' },
-    { id: 'reasoning', label: 'تفكير راقٍ', icon: Brain, color: 'bg-amber-600', description: 'Extended Reasoning (Pro)' },
+    { id: 'image', label: 'إنشاء صورة', icon: ImageIcon, color: 'bg-blue-600', description: 'Nano Banana 2 Art' },
+    { id: 'tts', label: 'دبلجة صوتية', icon: Mic2, color: 'bg-orange-600', description: 'Natural Arabic Voice' },
+    { id: 'chat', label: 'مساعد الإنتاج', icon: MessageSquare, color: 'bg-indigo-600', description: 'Script & Idea Buddy' },
+    { id: 'analysis', label: 'تحليل المشهد', icon: BarChart3, color: 'bg-cyan-600', description: 'Visual Analytics' },
   ];
 
   return (
@@ -63,6 +61,36 @@ export default function Dashboard({ onSelectAction, onOpenGallery }: DashboardPr
         ))}
       </div>
 
+      {/* Character Showcase */}
+      <div className="px-2 space-y-4">
+        <h3 className="text-[10px] font-black uppercase text-zinc-500 tracking-[0.2em] ml-2 flex items-center gap-2">
+          <UserCheck className="w-3 h-3 text-blue-500" />
+          Featured_Actors
+        </h3>
+        <div className="flex gap-4 overflow-x-auto no-scrollbar pb-2 px-1">
+          {FIXED_CHARACTERS.map((char) => (
+            <motion.div
+              key={char.id}
+              whileHover={{ y: -5 }}
+              className="flex-shrink-0 w-28 character-card text-center"
+            >
+              <div className="relative mb-2">
+                <img 
+                  src={char.avatar} 
+                  className="w-full aspect-square rounded-lg object-cover border border-white/10" 
+                  alt={char.name}
+                  referrerPolicy="no-referrer"
+                  loading="lazy"
+                />
+                <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 border-2 border-black rounded-full" />
+              </div>
+              <div className="text-[10px] font-black text-white uppercase">{char.nameAr}</div>
+              <div className="text-[8px] text-zinc-500 font-mono mt-0.5">{char.role}</div>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+
       {/* Secondary Actions */}
       <div className="px-2 space-y-4">
         <h3 className="text-[10px] font-black uppercase text-zinc-500 tracking-[0.2em] ml-2">Quick_Navigation</h3>
@@ -102,4 +130,6 @@ export default function Dashboard({ onSelectAction, onOpenGallery }: DashboardPr
       </div>
     </div>
   );
-}
+});
+
+export default Dashboard;

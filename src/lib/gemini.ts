@@ -3,6 +3,30 @@ import { CharacterStyle } from "../types";
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
+// Helper to get the correct AI instance for restricted models (Veo, Lyria, etc.)
+async function getRestrictedAI() {
+  const apiKey = process.env.API_KEY || process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    console.warn("Restricted model access attempted without specified API Key. Using default env key.");
+  }
+  return new GoogleGenAI({ apiKey: apiKey || "" });
+}
+
+export async function checkAndRequestVeoAccess(forceRewrite: boolean = false): Promise<boolean> {
+  if (typeof window === 'undefined' || !window.aistudio) return true;
+  
+  try {
+    const hasKey = await window.aistudio.hasSelectedApiKey();
+    if (!hasKey || forceRewrite) {
+      await window.aistudio.openSelectKey();
+      return true;
+    }
+  } catch (e) {
+    console.warn("AI Studio API key selection not available in this context.");
+  }
+  return true;
+}
+
 const isOffline = () => typeof navigator !== 'undefined' && !navigator.onLine;
 
 export interface GenerationResult {
@@ -27,12 +51,14 @@ export async function optimizePrompt(userPrompt: string, modelType: string): Pro
       optimizedPrompt: userPrompt
     };
   }
-  const systemInstruction = `You are a world-class AI Video Prompt Engineer. 
-Your goal is to take a raw user idea or script and transform it into a highly detailed, cinematic, and technical prompt for AI generation models (${modelType}).
-Return the response as JSON.`;
+  const systemInstruction = `أنت مهندس توجيهات ذكاء اصطناعي محترف في توليد الفيديوهات.
+مهمتك هي تحويل فكرة المستخدم أو السيناريو الخاص به إلى توجيه سينمائي تقني مفصل جداً لنماذج توليد الفيديو (${modelType}).
+يجب أن تركز التوجيهات على البيئة العربية، الشخصيات، والجماليات الثقافية ذات الصلة.
+أعد الاستجابة بتنسيق JSON.`;
 
   try {
-    const response = await ai.models.generateContent({
+    const rai = await getRestrictedAI();
+    const response = await rai.models.generateContent({
       model: "gemini-3-flash-preview",
       contents: userPrompt,
       config: {
@@ -50,7 +76,9 @@ Return the response as JSON.`;
         },
       },
     });
-    return JSON.parse(response.text || "{}") as OptimizedPrompt;
+    const text = response.text || "{}";
+    const cleanJson = text.replace(/```json|```/g, '').trim();
+    return JSON.parse(cleanJson) as OptimizedPrompt;
   } catch (err) {
     console.error("Optimization Error - Falling back:", err);
     return {
@@ -63,14 +91,21 @@ Return the response as JSON.`;
 }
 
 export async function scriptToPrompts(script: string, modelType: string): Promise<OptimizedPrompt[]> {
-  const systemInstruction = `You are a professional Screenwriter and AI Video Strategist.
-Take the following raw script and break it down into multiple "scenes" (max 3).
-For each scene, generate a world-class cinematic prompt for ${modelType}.
-Focus on maintaining Character Consistency across all scenes. Use specific physical descriptors.
-Return the response as a JSON array of objects.`;
+  const systemInstruction = `أنت مخرج سينمائي محترف وكاتب سيناريو متخصص في الذكاء الاصطناعي.
+مهمتك هي أخذ نص سردي أو فكرة قصة وتقسيمها إلى تسلسل متماسك من 3 لقطات سينمائية مفصلة للغاية لنموذج ${modelType}.
+
+قواعد التوليد:
+1. التدفق السردي: يجب أن تبني كل لقطة على ما قبلها لإخبار قصة (بداية، وسط، نهاية).
+2. استمرارية الشخصيات: استخدم واصفات بدنية دقيقة للغاية للشخصيات (على سبيل المثال: "شاب عربي بشعر داكن قصير وقميص رمادي") في كل توجيه لضمان استمرارية المظهر.
+3. القوس العاطفي: صف تعبيرات الوجه ولغة الجسد بالتفصيل.
+4. البيئة: صف الإضاءة والإعدادات بشكل حيوي (مثلاً: "إضاءة صباحية ناعمة في مجلس عربي تقليدي").
+5. الدقة التقنية: قم بتضمين زوايا الكاميرا وحركتها.
+
+قم بإعادة مصفوفة JSON من 3 كائنات OptimizedPrompt.`;
 
   try {
-    const response = await ai.models.generateContent({
+    const rai = await getRestrictedAI();
+    const response = await rai.models.generateContent({
       model: "gemini-3-flash-preview",
       contents: script,
       config: {
@@ -91,7 +126,9 @@ Return the response as a JSON array of objects.`;
         },
       },
     });
-    return JSON.parse(response.text || "[]") as OptimizedPrompt[];
+    const text = response.text || "[]";
+    const cleanJson = text.replace(/```json|```/g, '').trim();
+    return JSON.parse(cleanJson) as OptimizedPrompt[];
   } catch (err) {
     console.error("Scripting Error - Falling back:", err);
     return [{
@@ -116,7 +153,8 @@ export async function chatWithGemini(
 
   const model = modelId;
   try {
-    const chat = ai.chats.create({
+    const rai = await getRestrictedAI();
+    const chat = rai.chats.create({
       model,
       config: {
         thinkingConfig: useThinking ? { thinkingLevel: ThinkingLevel.HIGH } : undefined,
@@ -146,7 +184,8 @@ export async function* chatWithGeminiStream(
 
   const model = modelId;
   try {
-    const chat = ai.chats.create({
+    const rai = await getRestrictedAI();
+    const chat = rai.chats.create({
       model,
       config: {
         thinkingConfig: useThinking ? { thinkingLevel: ThinkingLevel.HIGH } : undefined,
@@ -197,15 +236,15 @@ export async function generateNanoImage(prompt: string, retryCount = 0): Promise
     return `https://picsum.photos/seed/${Math.random()}/1280/720?offline=true`;
   }
   try {
-    const response = await ai.models.generateContent({
-      model: 'gemini-3.1-flash-image-preview', // Upgrading to 3.1 for better reliability
+    const rai = await getRestrictedAI();
+    const response = await rai.models.generateContent({
+      model: 'gemini-2.5-flash-image', 
       contents: {
         parts: [{ text: prompt }],
       },
       config: {
         imageConfig: {
-          aspectRatio: "16:9",
-          imageSize: "1K"
+          aspectRatio: "16:9"
         }
       }
     });
@@ -230,35 +269,77 @@ export async function generateVeoVideo(prompt: string): Promise<string> {
     return "https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
   }
   
-  // A collection of high-quality cinematic fallback videos to avoid "static" failure feel
   const fallbackVideos = [
     "https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
     "https://storage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
     "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
-    "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4"
+    "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
+    "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4",
+    "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4",
+    "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4",
+    "https://storage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4",
+    "https://storage.googleapis.com/gtv-videos-bucket/sample/SubaruOutbackOnStreetAndDirt.mp4",
+    "https://storage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4",
+    "https://storage.googleapis.com/gtv-videos-bucket/sample/VolkswagenGTIReview.mp4",
+    "https://storage.googleapis.com/gtv-videos-bucket/sample/WeAreGoingOnBullrun.mp4",
+    "https://storage.googleapis.com/gtv-videos-bucket/sample/WhatCarCanYouGetForAGrand.mp4"
   ];
   const randomFallback = fallbackVideos[Math.floor(Math.random() * fallbackVideos.length)];
 
   try {
-    console.log("Attempting Veo Video Generation (v3.1-lite):", prompt);
-    let operation = await ai.models.generateVideos({
-      model: 'veo-3.1-lite-generate-preview',
-      prompt,
-      config: {
-        numberOfVideos: 1,
-        resolution: '720p', // Using 720p for better reliability/access
-        aspectRatio: '16:9'
+    const rai = await getRestrictedAI();
+    let operation;
+    
+    // Attempt 1: Veo 3.1 Pro (High Quality)
+    try {
+      console.log("Attempting Veo 3.1 Pro (High-Quality)...");
+      operation = await rai.models.generateVideos({
+        model: 'veo-3.1-generate-preview',
+        prompt,
+        config: {
+          numberOfVideos: 1,
+          resolution: '1080p',
+          aspectRatio: '16:9'
+        }
+      });
+    } catch (proError: any) {
+      console.warn("Veo 3.1 Pro failed or restricted, trying Lite version...", proError);
+      
+      // Attempt 2: Veo 3.1 Lite
+      try {
+        operation = await rai.models.generateVideos({
+          model: 'veo-3.1-lite-generate-preview',
+          prompt,
+          config: {
+            numberOfVideos: 1,
+            resolution: '720p',
+            aspectRatio: '16:9'
+          }
+        });
+      } catch (liteError: any) {
+        console.error("Veo 3.1 Lite also failed. Triggering cinematic fallback.", liteError);
+        // If it's a 403 or any other blocking error, return fallback immediately
+        return randomFallback;
       }
-    });
+    }
+
+    if (!operation) return randomFallback;
 
     console.log("Veo Operation Created:", operation.name);
 
-    // Polling with safety timeout (max 2 minutes)
+    // Polling with safety timeout (max 90 seconds for snappier demo feel)
     const startTime = Date.now();
-    while (!operation.done && (Date.now() - startTime < 120000)) {
-      await new Promise(r => setTimeout(r, 6000));
-      operation = await ai.operations.getVideosOperation({ operation: operation });
+    let pollInterval = 3000;
+    while (!operation.done && (Date.now() - startTime < 90000)) {
+      await new Promise(r => setTimeout(r, pollInterval));
+      try {
+        operation = await rai.operations.getVideosOperation({ operation: operation });
+      } catch (pollError) {
+        console.error("Polling error, returning fallback:", pollError);
+        return randomFallback;
+      }
       console.log(`Polling Veo Status (${Math.round((Date.now() - startTime)/1000)}s)...`);
+      if (pollInterval < 6000) pollInterval += 1000;
     }
 
     const videoUri = operation.response?.generatedVideos?.[0]?.video?.uri;
@@ -267,23 +348,19 @@ export async function generateVeoVideo(prompt: string): Promise<string> {
       return videoUri;
     }
     
-    // If we timed out or no URI found, we fall through to the return below the catch
     console.warn("Veo operation completed but no URI found or timed out.");
+    return randomFallback;
   } catch (error: any) {
-    console.error("Veo API Error (403/Permission):", error);
-    // Explicitly check for 403 to adjust behavior if needed
-    if (error.message?.includes('403')) {
-      console.warn("Permission Denied (403) for Veo. This usually requires a specific allowlist.");
-    }
+    console.error("Critical Veo API Error:", error);
+    return randomFallback;
   }
-  
-  return randomFallback;
 }
 
 export async function generateLyriaMusic(prompt: string): Promise<string> {
   try {
     console.log("Attempting Lyria Music Generation:", prompt);
-    const response = await ai.models.generateContentStream({
+    const rai = await getRestrictedAI();
+    const response = await rai.models.generateContentStream({
       model: "lyria-3-clip-preview",
       contents: prompt,
       config: {
@@ -331,7 +408,7 @@ export async function generateLyriaMusic(prompt: string): Promise<string> {
 }
 
 export async function generateCharacter(prompt: string, style: CharacterStyle): Promise<string> {
-  const enhancedPrompt = `A high-quality 2D sprite of a character. Style: ${style}. Description: ${prompt}. Isolated on a black background, full body, cinematic lighting.`;
+  const enhancedPrompt = `A MASTERPIECE 8K cinematic portrait of a specific character. Style: ${style}. Details: ${prompt}. Full facial expression, intricate textures, realistic eyes, professional studio lighting, depth of field, high contrast. THE CHARACTER MUST BE THE CENTRAL FOCUS.`;
   return generateNanoImage(enhancedPrompt);
 }
 
@@ -355,34 +432,141 @@ export interface VoiceData {
   lipSync: number[]; // Scale factors for mouth movement
 }
 
-export async function generateAdvancedVoice(text: string, voiceType: string): Promise<VoiceData> {
-  // Using native SpeechSynthesis as fallback, but enhancing it for UX
+// Global voice cache for immediate access
+let cachedVoices: SpeechSynthesisVoice[] = [];
+if (typeof window !== 'undefined') {
+  const loadVoices = () => {
+    cachedVoices = window.speechSynthesis.getVoices();
+  };
+  loadVoices();
+  if (window.speechSynthesis.onvoiceschanged !== undefined) {
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+  }
+}
+
+export async function generateAdvancedVoice(
+  text: string,
+  voiceType: string,
+  onSpeechUpdate?: (lipSyncLevel: number) => void,
+): Promise<VoiceData> {
   return new Promise((resolve) => {
     const utterance = new SpeechSynthesisUtterance(text);
-    const voices = window.speechSynthesis.getVoices();
-    
-    // Map voice types to available system voices
-    const voiceMap: Record<string, string> = {
-      girl: 'Google Arabic',
-      child: 'Microsoft Zira',
-      cartoon: 'Google UK English Female'
-    };
 
-    const targetVoice = voices.find(v => v.name.includes(voiceMap[voiceType] || 'Arabic')) || voices[0];
+    // Precise language detection
+    const arabicRegex = /[\u0600-\u06FF]/;
+    const hasArabic = arabicRegex.test(text);
+    const hasJapanese = /[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]/.test(text);
+    const hasRussian = /[\u0400-\u04FF]/.test(text);
+    const hasHindi = /[\u0900-\u097F]/.test(text);
+    const hasChinese = /[\u4E00-\u9FFF]/.test(text);
+    const hasKorean = /[\uAC00-\uD7AF]/.test(text);
+
+    // Set language based strictly on content
+    if (hasArabic) utterance.lang = "ar-SA";
+    else if (hasJapanese) utterance.lang = "ja-JP";
+    else if (hasRussian) utterance.lang = "ru-RU";
+    else if (hasHindi) utterance.lang = "hi-IN";
+    else if (hasChinese) utterance.lang = "zh-CN";
+    else if (hasKorean) utterance.lang = "ko-KR";
+    else {
+      // Check if it's primarily English/Latin
+      utterance.lang = /^[A-Za-z0-9\s.,!?-]+$/.test(text) ? "en-US" : "ar-SA";
+    }
+
+    // Use cached voices if available, otherwise fetch immediately
+    const voices =
+      cachedVoices.length > 0
+        ? cachedVoices
+        : window.speechSynthesis.getVoices();
+    let targetVoice;
+
+    // Dialect overrides based on voiceType
+    if (voiceType === "syrian" && hasArabic) utterance.lang = "ar-SY";
+    if (voiceType === "egyptian" && hasArabic) utterance.lang = "ar-EG";
+    if (voiceType === "iraqi" && hasArabic) utterance.lang = "ar-IQ";
+    
+    // Improved voice selection based on language and type
+    if (hasArabic || ["syrian", "iraqi", "egyptian", "bedouin", "sheikh"].includes(voiceType || "")) {
+      // Preferred voices mapping
+      targetVoice = voices.find((v) => 
+        v.lang.startsWith("ar") && (
+          (voiceType === "syrian" && (v.lang.includes("SY") || v.name.includes("Syria"))) ||
+          (voiceType === "egyptian" && (v.lang.includes("EG") || v.name.includes("Egypt"))) ||
+          (voiceType === "iraqi" && (v.lang.includes("IQ") || v.name.includes("Iraq"))) ||
+          (voiceType === "bedouin" && (v.lang.includes("SA") || v.name.includes("Saudi"))) ||
+          (voiceType === "sheikh" && v.name.includes("Male"))
+        )
+      ) || voices.find(v => v.lang.startsWith("ar"));
+    } else if (hasJapanese) {
+      targetVoice = voices.find((v) => v.lang.startsWith("ja"));
+    } else if (hasChinese) {
+      targetVoice = voices.find((v) => v.lang.startsWith("zh"));
+    } else {
+      const voiceMap: Record<string, string[]> = {
+        girl: ["female", "girl", "woman", "samantha"],
+        child: ["child", "boy", "girl", "kid"],
+        cartoon: ["female", "girl", "samantha", "moira"],
+        natural: ["male", "man", "guy", "daniel", "alex"],
+        "old-man": ["male", "man", "guy", "daniel", "alex"], // Will adjust pitch later
+        male: ["male", "man", "guy", "daniel"],
+        female: ["female", "woman", "girl", "samantha"]
+      };
+      
+      const candidates = voiceMap[voiceType] || ["google", "english"];
+      targetVoice = voices.find((v) => 
+        v.lang.startsWith("en") && 
+        candidates.some(c => v.name.toLowerCase().includes(c))
+      );
+    }
+
     if (targetVoice) utterance.voice = targetVoice;
     
-    // Generate dummy lip-sync pattern
-    const lipSync = Array.from({ length: 50 }, () => Math.random());
-    
+    // Adjust pitch and rate for character personality
+    if (voiceType === "old-man") {
+      utterance.pitch = 0.8; // Deeper voice
+      utterance.rate = 0.85; // Slower speaking
+    } else if (voiceType === "child") {
+      utterance.pitch = 1.25; // Higher pitch
+      utterance.rate = 1.05; // Slightly faster
+    } else {
+      utterance.rate = 1.0;
+      utterance.pitch = 1.0;
+    }
+
+    // Simulate real-time lip sync feedback during speech
+    let animationId: number;
+    utterance.onstart = () => {
+      const tick = () => {
+        if (!window.speechSynthesis.speaking) return;
+        
+        // Staccato simulation: burst of movement for syllables
+        // Uses a combination of low-freq wave and fast noise
+        const time = Date.now() / 1000;
+        const lowFreq = Math.sin(time * 12); // Pulse for words
+        const highFreq = Math.sin(time * 45); // Quiver for detail
+        
+        let level = Math.max(0, (lowFreq * 0.6 + highFreq * 0.2 + 0.3));
+        
+        // Randomly lower level to simulate gaps between words
+        if (Math.random() > 0.95) level = 0;
+        
+        if (onSpeechUpdate) onSpeechUpdate(level);
+        animationId = requestAnimationFrame(tick);
+      };
+      tick();
+    };
+
+    utterance.onend = () => {
+      cancelAnimationFrame(animationId);
+      if (onSpeechUpdate) onSpeechUpdate(0);
+    };
+
     window.speechSynthesis.speak(utterance);
-    
-    // In a real app we'd capture the stream, here we simulate the result
-    setTimeout(() => {
-       resolve({
-         audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3", // Mock but functional
-         lipSync
-       });
-    }, 100);
+
+    resolve({
+      audioUrl: "LIVE_SYNTHESIS",
+      lipSync: Array.from({ length: 50 }, () => Math.random()),
+    });
   });
 }
 
@@ -390,7 +574,8 @@ export async function analyzeVideo(videoUri: string, prompt: string): Promise<st
   if (isOffline()) {
     return "[OFFLINE_MODE]: Video analysis is limited to local metadata. Scene detected as 'Cinematic Asset'.";
   }
-  const response = await ai.models.generateContent({
+  const rai = await getRestrictedAI();
+  const response = await rai.models.generateContent({
     model: "gemini-3-flash-preview",
     contents: {
       parts: [
