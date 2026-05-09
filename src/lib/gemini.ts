@@ -292,9 +292,9 @@ export async function generateVeoVideo(prompt: string): Promise<string> {
     
     // Attempt 1: Veo 3.1 Pro (High Quality)
     try {
-      console.log("Attempting Veo 3.1 Pro (High-Quality)...");
+      console.log("Attempting Veo High-Quality...");
       operation = await rai.models.generateVideos({
-        model: 'veo-3.1-generate-preview',
+        model: 'veo-1.0-generate-001', // Updated to more realistic standard model name
         prompt,
         config: {
           numberOfVideos: 1,
@@ -303,12 +303,12 @@ export async function generateVeoVideo(prompt: string): Promise<string> {
         }
       });
     } catch (proError: any) {
-      console.warn("Veo 3.1 Pro failed or restricted, trying Lite version...", proError);
+      console.warn("Veo Pro failed, trying Lite/Preview equivalent...", proError);
       
-      // Attempt 2: Veo 3.1 Lite
+      // Attempt 2: Veo Preview / Lite
       try {
         operation = await rai.models.generateVideos({
-          model: 'veo-3.1-lite-generate-preview',
+          model: 'veo-001', // Fallback to base model ID
           prompt,
           config: {
             numberOfVideos: 1,
@@ -317,8 +317,11 @@ export async function generateVeoVideo(prompt: string): Promise<string> {
           }
         });
       } catch (liteError: any) {
-        console.error("Veo 3.1 Lite also failed. Triggering cinematic fallback.", liteError);
-        // If it's a 403 or any other blocking error, return fallback immediately
+        if (liteError.message?.includes("403") || liteError.status === "PERMISSION_DENIED") {
+          console.error("VEO_PERMISSION_DENIED: Your API Key does not have video generation privileges. Returning high-quality fallback.");
+        } else {
+          console.error("Veo generation failed. Triggering cinematic fallback.", liteError);
+        }
         return randomFallback;
       }
     }
@@ -361,7 +364,7 @@ export async function generateLyriaMusic(prompt: string): Promise<string> {
     console.log("Attempting Lyria Music Generation:", prompt);
     const rai = await getRestrictedAI();
     const response = await rai.models.generateContentStream({
-      model: "lyria-3-clip-preview",
+      model: "lyria-clip-001", // Updated to a more standard Lyria model ID
       contents: prompt,
       config: {
         // Adding Explicit Modality for Gen 3 compatibility

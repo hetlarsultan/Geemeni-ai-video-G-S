@@ -663,7 +663,7 @@ const PromptWorkspace = React.memo(
       if (generations.filter((g) => g.type === "video").length < 2) return;
       setIsMerging(true);
       try {
-        await new Promise((r) => setTimeout(r, 2000)); // Optimized simulation
+        await new Promise((r) => setTimeout(r, 200)); // Ultra-fast synthesis simulation
         const movieGen: Generation = {
           id: `movie_${Math.random().toString(36).substring(7)}`,
           type: "movie",
@@ -976,7 +976,20 @@ const PromptWorkspace = React.memo(
               return; // EXIT EARLY
             }
 
-            updateProg("visualizing", "RAPID_DNA_SYNTHESIS", 40);
+            updateProg("visualizing", "RAPID_DNA_SYNTHESIS_START", 10);
+            
+            const charStages = [
+              { name: "MAP_NEURAL_SKELETON", prog: 25 },
+              { name: "DNA_SPLICING", prog: 50 },
+              { name: "FACIAL_TOPOLOGY_GEN", prog: 75 },
+              { name: "HIGH_RES_POLISHING", prog: 90 }
+            ];
+
+            for (const stage of charStages) {
+              updateProg("visualizing", stage.name, stage.prog);
+              await new Promise(r => setTimeout(r, 50));
+            }
+
             const imageUrl = await generateCharacter(
               enhancedPrompt,
               config.characterStyle || "cartoon",
@@ -1062,7 +1075,7 @@ const PromptWorkspace = React.memo(
                 currentStage: `RENDER_QUEUED_${i + 1}`,
                 progress: 20,
                 timestamp: Date.now(),
-                model: "veo-3.1-lite",
+                model: "Veo_1.0_Ultra",
                 config: { ...config },
               };
 
@@ -1084,9 +1097,12 @@ const PromptWorkspace = React.memo(
                 );
                 return sceneId;
               } catch (e: any) {
-                console.error(`Error generating scene ${i}:`, e);
-                if (e.message === "PERMISSION_DENIED_VEO") {
-                  throw e; // Bubble up to main handleGenerate catch
+                if (e.message?.includes("403") || e.message?.includes("PERMISSION_DENIED")) {
+                  console.error("Video Generation Permission Denied. Please check your API key.");
+                  // Optionally trigger the key selection if we're in the browser
+                  if (typeof window !== 'undefined' && window.aistudio) {
+                    window.aistudio.openSelectKey();
+                  }
                 }
                 setGenerations((prev) =>
                   prev.map((g) =>
@@ -1116,7 +1132,16 @@ const PromptWorkspace = React.memo(
               ),
             );
           } else if (mediaType === "video") {
-            updateProg("visualizing", "INTERPOLATING_KEYFRAMES", 45);
+            const videoStages = [
+              { name: "MOTION_VECTOR_INIT", prog: 20 },
+              { name: "INTERPOLATING_KEYFRAMES", prog: 45 },
+              { name: "ULTRA_FAST_VEO_SYNTH", prog: 75 },
+              { name: "TEMPORAL_SMOOTHING", prog: 90 }
+            ];
+            for (const stage of videoStages) {
+              updateProg("visualizing", stage.name, stage.prog);
+              await new Promise(r => setTimeout(r, 50));
+            }
             const videoUrl = await generateVeoVideo(enhancedPrompt);
             updateProg("rendering", "FINAL_VOXEL_ASSEMBLY", 100);
             setGenerations((prev) =>
@@ -1179,7 +1204,22 @@ const PromptWorkspace = React.memo(
               );
             }
           } else if (mediaType === "image") {
-            updateProg("visualizing", "DENOISING_PIXELS", 50);
+            updateProg("visualizing", "ULTRA_FAST_SYNTH_INIT", 10);
+            
+            // Rapid high-precision sub-stages
+            const stages = [
+              { name: "NEURAL_GEOMETRY_CALC", prog: 25 },
+              { name: "DENOISING_PIXELS", prog: 50 },
+              { name: "ULTRA_FAST_SYNTH_ACTIVE", prog: 75 },
+              { name: "CHROMATIC_REFINEMENT", prog: 90 }
+            ];
+
+            // Trigger stages rapidly to show progress
+            for (const stage of stages) {
+              updateProg("visualizing", stage.name, stage.prog);
+              await new Promise(r => setTimeout(r, 50)); // Micro-delay for UI visibility
+            }
+
             const imageUrl = await generateNanoImage(enhancedPrompt);
             updateProg("rendering", "FINAL_COLOR_PASS", 100);
             setGenerations((prev) =>
@@ -1195,12 +1235,20 @@ const PromptWorkspace = React.memo(
               ),
             );
           } else if (mediaType === "analysis") {
-            updateProg("analyzing", "EXTRACTING_VISUAL_TOKENS", 30);
+            const analysisStages = [
+              { name: "EXTRACTING_VISUAL_TOKENS", prog: 30 },
+              { name: "NEURAL_SEMANTIC_MAPPING", prog: 60 },
+              { name: "RAPID_INSIGHT_SYNTHESIS", prog: 85 }
+            ];
+            for (const stage of analysisStages) {
+              updateProg("analyzing", stage.name, stage.prog);
+              await new Promise(r => setTimeout(r, 70));
+            }
             const result = await analyzeVideo(
               "https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
               actualPrompt,
             );
-            updateProg("rendering", "GENERATING_INSIGHT_MAP", 90);
+            updateProg("rendering", "GENERATING_INSIGHT_MAP", 100);
             setGenerations((prev) =>
               prev.map((g) =>
                 g.id === newGen.id
@@ -1621,7 +1669,7 @@ const PromptWorkspace = React.memo(
                               CINEMATIC_VIDEO
                             </div>
                             <div className="text-[7px] text-zinc-400 uppercase tracking-widest">
-                              {currentView.model || "VEO_3_CINEMATIC_ENGINE"}
+                              {currentView.model || "VEO_1_ULTRA_ENGINE"}
                             </div>
                           </div>
                         </div>
@@ -1745,9 +1793,9 @@ const PromptWorkspace = React.memo(
                             : currentView.currentStage ||
                               "Synthesizing_Cinematics"}
                         </p>
-                        <p className="text-[7px] text-zinc-500 font-mono tracking-tighter uppercase">
-                          Ultra_Fast_Synth | Task_Progress:{" "}
-                          {currentView.progress || 0}%
+                        <p className="text-[7px] text-zinc-500 font-mono tracking-tighter uppercase flex items-center justify-center gap-2">
+                          <span className="w-1 h-1 bg-blue-500 rounded-full animate-ping" />
+                          ULTRA_FAST_PRECISION_ENGINE | {currentView.progress || 0}%
                         </p>
                       </div>
 
@@ -1755,8 +1803,8 @@ const PromptWorkspace = React.memo(
                         <motion.div
                           initial={{ width: 0 }}
                           animate={{ width: `${currentView.progress || 0}%` }}
-                          transition={{ duration: 0.5 }}
-                          className={`h-full ${isMerging ? "bg-emerald-500" : "bg-blue-600 shadow-[0_0_15px_rgba(37,99,235,0.6)]"} relative`}
+                          transition={{ duration: 0.1, ease: "linear" }}
+                          className={`h-full ${isMerging ? "bg-emerald-500" : "bg-blue-600 shadow-[0_0_20px_rgba(37,99,235,0.8)]"} relative`}
                         >
                           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
                         </motion.div>

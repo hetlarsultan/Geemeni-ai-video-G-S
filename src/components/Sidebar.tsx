@@ -5,6 +5,8 @@ import { motion, AnimatePresence } from 'motion/react';
 import { FIXED_CHARACTERS, VISUAL_FILTERS } from '../constants';
 import { chatWithGemini } from '../lib/gemini';
 
+import { checkAndRequestVeoAccess } from '../lib/gemini';
+
 interface SidebarProps {
   model: VideoModel;
   setModel: (model: VideoModel) => void;
@@ -14,10 +16,17 @@ interface SidebarProps {
   onBack?: () => void;
 }
 
-const MODELS: VideoModel[] = ['Sora 2', 'Kling v1.5', 'Veo 3.1', 'Luma Dream Machine', 'Runway Gen-3'];
+const MODELS: VideoModel[] = ['Sora 2', 'Kling v1.5', 'Veo 1.0 Ultra', 'Luma Dream Machine', 'Runway Gen-3'];
 
 const Sidebar = React.memo(({ model, setModel, config, setConfig, view, onBack }: SidebarProps) => {
   const isMobile = !!view;
+  const [isUpdatingKey, setIsUpdatingKey] = useState(false);
+
+  const handleUpdateKey = async () => {
+    setIsUpdatingKey(true);
+    await checkAndRequestVeoAccess(true);
+    setIsUpdatingKey(false);
+  };
   const [customCharacters, setCustomCharacters] = useState<Character[]>([]);
   const [isAddingActor, setIsAddingActor] = useState(false);
   const [newActor, setNewActor] = useState<Partial<Character>>({
@@ -186,7 +195,17 @@ Format: [English Enhanced Description] | [Arabic Enhanced Description]`;
               <Zap className="w-3.5 h-3.5 text-blue-500" />
               Model_Suite.lib
             </span>
-            <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse" />
+            <div className="flex items-center gap-2">
+              <button 
+                onClick={handleUpdateKey}
+                disabled={isUpdatingKey}
+                className="p-1 hover:bg-zinc-800 rounded transition-colors text-zinc-500 hover:text-blue-400"
+                title="Update API Key for Restricted Models (Veo/Lyria)"
+              >
+                {isUpdatingKey ? <Loader2 className="w-3 h-3 animate-spin" /> : <Settings2 className="w-3 h-3" />}
+              </button>
+              <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse" />
+            </div>
           </h3>
           <div className="space-y-1.5 overflow-y-auto pr-1">
             {MODELS.map((m) => (

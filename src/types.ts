@@ -1,16 +1,16 @@
 export type VideoModel = 
   | 'Sora 2' 
   | 'Kling v1.5' 
-  | 'Veo 3.1' 
+  | 'Veo 1.0 Ultra' 
   | 'Luma Dream Machine' 
   | 'Runway Gen-3' 
   | 'Midjourney v6' 
   | 'DALL-E 3' 
   | 'ElevenLabs Alpha'
-  | 'Veo 3'
+  | 'Veo 3 Pro'
   | 'Nano Banana 2'
   | 'Lyria'
-  | 'Gemini 3.1 Pro';
+  | 'Gemini 3. Pro';
 
 export type MediaType = 'video' | 'image' | 'audio' | 'chat' | 'analysis' | 'movie' | 'character' | 'animated-image';
 
