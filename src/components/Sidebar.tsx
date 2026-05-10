@@ -12,15 +12,32 @@ interface SidebarProps {
   setModel: (model: VideoModel) => void;
   config: ShotConfig;
   setConfig: (config: ShotConfig) => void;
-  view?: 'models' | 'actors' | 'env';
+  view?: 'models' | 'actors' | 'env' | 'hub';
   onBack?: () => void;
+  onOpenHub?: () => void;
 }
 
 const MODELS: VideoModel[] = ['Sora 2', 'Kling v1.5', 'Veo 1.0 Ultra', 'Luma Dream Machine', 'Runway Gen-3'];
 
-const Sidebar = React.memo(({ model, setModel, config, setConfig, view, onBack }: SidebarProps) => {
+const Sidebar = React.memo(({ model, setModel, config, setConfig, view, onBack, onOpenHub }: SidebarProps) => {
   const isMobile = !!view;
   const [isUpdatingKey, setIsUpdatingKey] = useState(false);
+  const [keysStatus, setKeysStatus] = useState({
+    gemini: !!process.env.GEMINI_API_KEY,
+    openai: !!import.meta.env.VITE_OPENAI_API_KEY,
+    deepseek: !!import.meta.env.VITE_DEEPSEEK_API_KEY
+  });
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setKeysStatus({
+        gemini: !!process.env.GEMINI_API_KEY,
+        openai: !!import.meta.env.VITE_OPENAI_API_KEY,
+        deepseek: !!import.meta.env.VITE_DEEPSEEK_API_KEY
+      });
+    }, 5000);
+    return () => clearInterval(timer);
+  }, []);
 
   const handleUpdateKey = async () => {
     setIsUpdatingKey(true);
@@ -221,6 +238,25 @@ Format: [English Enhanced Description] | [Arabic Enhanced Description]`;
                 <span className="font-bold tracking-tight">{m}</span>
                 <div className={`w-1 h-1 rounded-full ${model === m ? 'bg-blue-400' : 'bg-zinc-800'}`} />
               </button>
+            ))}
+          </div>
+          
+          {/* Connection Status Bridges */}
+          <div className="mt-4 pt-3 border-t border-zinc-900 grid grid-cols-3 gap-2">
+            {[
+              { id: 'gemini', label: 'GEMINI', status: keysStatus.gemini },
+              { id: 'openai', label: 'GPT-4', status: keysStatus.openai },
+              { id: 'deepseek', label: 'DS-V3', status: keysStatus.deepseek }
+            ].map(k => (
+              <div key={k.id} className="flex flex-col items-center gap-1 group/key">
+                <div className={`w-1.5 h-1.5 rounded-full ${k.status ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]' : 'bg-red-500/40'}`} />
+                <span className={`text-[7px] font-black uppercase ${k.status ? 'text-zinc-400' : 'text-zinc-600'}`}>{k.label}</span>
+                {!k.status && (
+                  <div className="absolute bottom-full mb-2 hidden group-hover/key:block bg-zinc-900 border border-zinc-800 p-2 rounded text-[8px] text-zinc-400 whitespace-nowrap z-50">
+                    Add VITE_{k.id.toUpperCase()}_API_KEY in Settings
+                  </div>
+                )}
+              </div>
             ))}
           </div>
         </section>
@@ -631,6 +667,47 @@ Format: [English Enhanced Description] | [Arabic Enhanced Description]`;
                    Particle_Gen
                 </button>
              </div>
+          </div>
+        </section>
+      )}
+
+      {/* External AI Integrations Hub */}
+      {(!isMobile || view === 'hub') && (
+        <section className={`${!isMobile ? 'col-start-9 col-span-4 row-start-5 row-span-2' : ''} bento-card p-4 h-full flex flex-col group/hub`}>
+          <h3 className="text-[10px] font-black uppercase text-zinc-500 mb-3 flex items-center justify-between tracking-[0.2em]">
+            <span className="flex items-center gap-2">
+              <Globe className="w-3.5 h-3.5 text-blue-500 group-hover/hub:rotate-12 transition-transform" />
+              External_AI_Engines
+            </span>
+            <button 
+              onClick={onOpenHub}
+              className="text-[8px] text-zinc-500 hover:text-blue-400 font-bold flex items-center gap-1"
+            >
+              FULL_HUB <ArrowLeft className="w-2.5 h-2.5 rotate-180" />
+            </button>
+          </h3>
+          <div className="grid grid-cols-2 gap-2 overflow-y-auto no-scrollbar">
+             {[
+               { name: 'ChatGPT', url: 'https://chat.openai.com', color: 'bg-emerald-500/10 text-emerald-400' },
+               { name: 'Lovila', url: '#', color: 'bg-indigo-500/10 text-indigo-400' },
+               { name: 'SleepDeck', url: '#', color: 'bg-purple-500/10 text-purple-400' },
+               { name: 'Leonardo', url: 'https://leonardo.ai', color: 'bg-amber-500/10 text-amber-400' }
+             ].map((ext) => (
+               <a 
+                 key={ext.name}
+                 href={ext.url}
+                 target="_blank"
+                 rel="noopener noreferrer"
+                 className={`p-2 bento-inner ${ext.color} flex flex-col gap-1 hover:brightness-125 transition-all text-center border-none`}
+               >
+                 <span className="text-[10px] font-black">{ext.name}</span>
+                 <span className="text-[7px] font-mono opacity-60">SYNC_READY</span>
+               </a>
+             ))}
+          </div>
+          <div className="mt-auto pt-3 border-t border-zinc-900 flex justify-between items-center">
+             <span className="text-[8px] text-zinc-600 font-mono italic">Production Grade Bridges</span>
+             <Sparkles className="w-3 h-3 text-blue-500/40" />
           </div>
         </section>
       )}

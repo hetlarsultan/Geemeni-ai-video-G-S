@@ -1,62 +1,13 @@
 import { Character } from './types';
 
 export const FIXED_CHARACTERS: Character[] = [
-  // Cultural & Regional Characters
-  {
-    id: "sheikh-wise",
-    name: "Sheikh Wise",
-    nameAr: "الشيخ الحكيم",
-    role: "حكيم / مستشار",
-    description: "رجل مسن ذو لحية بيضاء كفييفة وملابس تقليدية رصينة. يتحدث بحكمة عميقة وصوت هادئ وموزون.",
-    avatar: "https://images.unsplash.com/photo-1542103749-8ef59b94f4b3?auto=format&fit=crop&q=80&w=300&h=300",
-    style: "realistic",
-  },
-  {
-    id: "bedouin-warrior",
-    name: "Bedouin Warrior",
-    nameAr: "الفارس البدوي",
-    role: "فارس صحراوي",
-    description: "رجل صحراوي ذو ملامح حادة وبشرة لفحتها الشمس، يرتدي العمامة العربية التقليدية. صوت قوي وخشن.",
-    avatar: "https://images.unsplash.com/photo-1510279543168-5e7836b2848c?auto=format&fit=crop&q=80&w=300&h=300",
-    style: "realistic",
-  },
-  {
-    id: "nabati-poetess",
-    name: "Nabati Poetess",
-    nameAr: "شاعرة النبط",
-    role: "شاعرة / أديبة",
-    description: "امرأة أنيقة ذات ملامح راقية، متخصصة في الشعر النبطي. صوت أنثوي ناعم وبليغ.",
-    avatar: "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&q=80&w=300&h=300",
-    style: "realistic",
-  },
-  {
-    id: "middle-eastern-man", 
-    name: "Modern Arab Man", 
-    nameAr: "شاب عصري", 
-    role: "مهني محترف", 
-    description: "شاب عربي بمظهر مهني عصري، ملامح واضحة ونظرة واثقة. صوت مصقول ولبق.",
-    avatar: "https://images.unsplash.com/photo-1540569014015-19a7ee504e3a?auto=format&fit=crop&q=80&w=300&h=300",
-    style: "realistic",
-    preferredVoice: "egyptian",
-    preferredDialect: "egyptian"
-  },
-  { 
-    id: "middle-eastern-woman", 
-    name: "Arab Woman", 
-    nameAr: "فتاة عربية", 
-    role: "رائدة شبابية", 
-    description: "فتاة عربية جميلة ذات عيون معبرة وصوت ودود وناعم.", 
-    avatar: "https://images.unsplash.com/photo-1510154221590-ff63e90a136f?auto=format&fit=crop&q=80&w=300&h=300",
-    style: "realistic",
-    preferredVoice: "syrian",
-    preferredDialect: "syrian"
-  },
+  // Realistic Subjects
   {
     id: "realistic-girl",
     name: "Arabic Girl",
     nameAr: "بنت عربية",
     role: "شخصية رئيسية",
-    description: "طفلة عربية بملامح بريئة وعيون واسعة، ترتدي ملابس ملونة زاهية. تعبر عن الفرح والفضول.",
+    description: "فتاة عربية بملامح جذابة وعيون معبرة، تم تدريبها خصيصاً لتحريك الشفاه بتقنية SadTalker.",
     avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=300&h=300",
     style: "realistic"
   },
@@ -72,23 +23,15 @@ export const FIXED_CHARACTERS: Character[] = [
     preferredDialect: "syrian"
   },
   {
-    id: "realistic-child",
-    name: "Arab Child",
-    nameAr: "طفل عربي",
-    role: "شخصية مساعدة",
-    description: "طفل صغير مرح ذو شعر مبعثر وابتسامة دافئة. يمثل البراءة والمغامرة في الصحراء.",
-    avatar: "https://images.unsplash.com/photo-1519238263530-99bdd1102f00?auto=format&fit=crop&q=80&w=300&h=300",
-    style: "realistic"
+    id: "nabati-poetess",
+    name: "Nabati Poetess",
+    nameAr: "شاعرة النبط",
+    role: "شاعرة / أديبة",
+    description: "امرأة أنيقة ذات ملامح راقية، متخصصة في الشعر النبطي. صوت أنثوي ناعم وبليغ.",
+    avatar: "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&q=80&w=300&h=300",
+    style: "realistic",
   },
-  {
-    id: "realistic-old-man",
-    name: "Old Sheikh",
-    nameAr: "شيخ وقور",
-    role: "موجه / قدوة",
-    description: "رجل مسن بمظهر وقور ولحية رمادية، يرتدي العباءة التقليدية. ملامحه تعكس خبرة السنين والحكمة.",
-    avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=300&h=300",
-    style: "realistic"
-  },
+  // Cartoon Stylized
   { 
     id: 'cartoon-boy', 
     name: 'Cartoon Boy', 
@@ -105,15 +48,6 @@ export const FIXED_CHARACTERS: Character[] = [
     role: 'شخصية مرحة', 
     description: 'بنت كرتونية مرحة بألوان زاهية وتصميم جذاب يناسب قصص الأطفال.', 
     avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=200&h=200',
-    style: 'cartoon'
-  },
-  { 
-    id: 'cartoon-old-man', 
-    name: 'Cartoon Old Man', 
-    nameAr: 'جدو حكيم (كرتون)', 
-    role: 'جد / حكيم', 
-    description: 'رجل مسن كرتوني ملامح مبالغ فيها وحبة، يمثل الحكمة والمرح في آن واحد.', 
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=200&h=200',
     style: 'cartoon'
   }
 ];

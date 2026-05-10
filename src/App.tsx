@@ -3,6 +3,8 @@ import Dashboard from './components/Dashboard';
 import Gallery from './components/Gallery';
 import Sidebar from './components/Sidebar';
 import PromptWorkspace from './components/PromptWorkspace';
+import PublicLanding from './components/PublicLanding';
+import IntegrationsHub from './components/IntegrationsHub';
 import { VideoModel, ShotConfig, MediaType } from './types';
 import { motion, AnimatePresence } from 'motion/react';
 import { Layout, Zap, Users, Mountain, Box, Smartphone, Home, FolderOpen, ArrowLeft } from 'lucide-react';
@@ -53,9 +55,17 @@ export default function App() {
     localStorage.setItem('studio_config', JSON.stringify(config));
   }, [config]);
 
-  const [activeTab, setActiveTab] = useState<'home' | 'studio' | 'gallery' | 'models' | 'actors' | 'env'>('home');
+  const [activeTab, setActiveTab] = useState<'home' | 'studio' | 'gallery' | 'models' | 'actors' | 'env' | 'hub'>('home');
   const [initialMediaType, setInitialMediaType] = useState<MediaType>('video');
   const [isMobile, setIsMobile] = useState(false);
+  const [hasEntered, setHasEntered] = useState(() => {
+    return localStorage.getItem('studio_entered') === 'true';
+  });
+
+  const enterStudio = useCallback(() => {
+    setHasEntered(true);
+    localStorage.setItem('studio_entered', 'true');
+  }, []);
 
   // History state for back button
   const [tabHistory, setTabHistory] = useState<typeof activeTab[]>(['home']);
@@ -87,10 +97,24 @@ export default function App() {
   }, [tabHistory]);
 
   return (
-    <div className="flex flex-col h-screen w-screen overflow-hidden bg-black text-white font-sans selection:bg-blue-500/30">
+    <div className="flex flex-col h-screen w-screen overflow-hidden bg-black text-white font-sans selection:bg-blue-500/30 text-right" dir="rtl">
+      <AnimatePresence>
+        {!hasEntered && (
+          <motion.div
+            key="landing"
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.6, ease: "easeInOut" }}
+            className="fixed inset-0 z-[300]"
+          >
+            <PublicLanding onEnter={enterStudio} />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Header - Compact for Mobile */}
       <header className={`flex justify-between items-center shrink-0 border-b border-zinc-800/50 backdrop-blur-md px-4 py-3 sm:px-6 sm:py-4 ${isMobile ? 'z-50' : ''}`}>
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-3 space-x-reverse">
           {activeTab !== 'home' ? (
             <motion.button
               initial={{ x: -10, opacity: 0 }}
@@ -114,8 +138,16 @@ export default function App() {
         </div>
         
         {!isMobile ? (
-          <div className="flex items-center space-x-6">
-            <div className="flex items-center space-x-2 bg-blue-500/10 rounded-full px-4 py-1.5 border border-blue-500/20">
+          <div className="flex items-center space-x-6 space-x-reverse">
+            <button 
+              onClick={() => changeTab('gallery')}
+              className={`flex items-center space-x-2 space-x-reverse px-3 py-1.5 rounded-full transition-colors ${activeTab === 'gallery' ? 'bg-blue-500/20 text-blue-400' : 'text-zinc-400 hover:text-white'}`}
+            >
+              <FolderOpen className="w-4 h-4" />
+              <span className="text-xs font-bold uppercase tracking-widest">معرض الأعمال</span>
+            </button>
+            <div className="w-px h-4 bg-zinc-800" />
+            <div className="flex items-center space-x-2 space-x-reverse bg-blue-500/10 rounded-full px-4 py-1.5 border border-blue-500/20">
                <Zap className="w-3 h-3 text-blue-500 animate-pulse" />
                <span className="text-[10px] font-mono font-bold text-blue-400">السرعة القصوى: مفعلة</span>
             </div>
@@ -141,138 +173,162 @@ export default function App() {
 
       {/* Main Content Area */}
       <main className={`flex-grow overflow-hidden relative ${isMobile ? 'pb-20' : 'p-6'}`}>
-        {!isMobile ? (
-          <div className="grid grid-cols-12 grid-rows-6 gap-4 h-full">
-            <Sidebar 
-              model={model} 
-              setModel={setModel} 
-              config={config} 
-              setConfig={(newConfig) => {
-                setConfig(newConfig);
-                if (isMobile && newConfig.selectedCharacters && newConfig.selectedCharacters.length > 0) {
-                  changeTab('studio');
-                }
-              }} 
-            />
-            <PromptWorkspace 
-              model={model} 
-              config={config} 
-              setConfig={setConfig}
-            />
-          </div>
-        ) : (
-          <div className="h-full w-full overflow-y-auto custom-scrollbar p-4">
-             <AnimatePresence mode="wait">
-                <motion.div
-                  key={activeTab}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.15 }}
-                  className="h-full"
-                >
-                   {activeTab === 'home' && (
-                     <Dashboard 
-                       onSelectAction={(action) => {
-                         const typeMap: Record<string, MediaType> = {
-                           'image': 'image',
-                           'video': 'video',
-                           'tts': 'audio',
-                           'img2vid': 'video',
-                           'chat': 'chat',
-                           'music': 'audio',
-                           'analysis': 'analysis',
-                           'reasoning': 'chat',
-                           'character': 'character',
-                           'movie': 'movie',
-                           'animated-image': 'animated-image'
-                         };
-                         setInitialMediaType(typeMap[action]);
-                         changeTab('studio');
-                       }}
-                       onOpenGallery={() => changeTab('gallery')}
-                     />
-                   )}
+        <AnimatePresence mode="wait">
+          {!isMobile ? (
+            <motion.div 
+              key={activeTab}
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 1.02 }}
+              transition={{ duration: 0.2 }}
+              className="h-full"
+            >
+              {activeTab === 'gallery' ? (
+                <Gallery 
+                  onClose={() => handleBack()} 
+                  onSelect={(gen) => {
+                    changeTab('studio');
+                  }}
+                />
+              ) : activeTab === 'hub' ? (
+                <IntegrationsHub onClose={() => handleBack()} />
+              ) : (
+                <div className="grid grid-cols-12 grid-rows-6 gap-4 h-full text-right" dir="rtl">
+                  <Sidebar 
+                    model={model} 
+                    setModel={setModel} 
+                    config={config} 
+                    setConfig={(newConfig) => {
+                      setConfig(newConfig);
+                    }} 
+                    onOpenHub={() => changeTab('hub')}
+                  />
+                  <PromptWorkspace 
+                    model={model} 
+                    config={config} 
+                    setConfig={setConfig}
+                  />
+                </div>
+              )}
+            </motion.div>
+          ) : (
+            <motion.div
+              key={activeTab}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+              className="h-full w-full overflow-y-auto custom-scrollbar p-4"
+            >
+               {activeTab === 'home' && (
+                 <Dashboard 
+                   onSelectAction={(action) => {
+                     const typeMap: Record<string, MediaType> = {
+                       'image': 'image',
+                       'video': 'video',
+                       'tts': 'audio',
+                       'img2vid': 'video',
+                       'chat': 'chat',
+                       'music': 'audio',
+                       'analysis': 'analysis',
+                       'reasoning': 'chat',
+                       'character': 'character',
+                       'movie': 'movie',
+                       'animated-image': 'animated-image'
+                     };
+                     setInitialMediaType(typeMap[action]);
+                     changeTab('studio');
+                   }}
+                   onOpenGallery={() => changeTab('gallery')}
+                   onOpenHub={() => changeTab('hub')}
+                 />
+               )}
 
-                   {activeTab === 'gallery' && (
-                     <Gallery 
-                       onClose={() => handleBack()}
-                       onSelect={(gen) => {
-                         changeTab('studio');
-                       }}
-                     />
-                   )}
+               {activeTab === 'gallery' && (
+                 <Gallery 
+                   onClose={() => handleBack()}
+                   onSelect={(gen) => {
+                     changeTab('studio');
+                   }}
+                 />
+               )}
 
-                   {activeTab === 'studio' && (
-                     <div className="space-y-4">
-                        <PromptWorkspace 
-                          model={model} 
-                          config={config} 
-                          setConfig={setConfig}
-                          isMobile={true} 
-                          initialMediaType={initialMediaType}
-                          onBack={handleBack}
-                        />
-                     </div>
-                   )}
-                   
-                   {activeTab === 'models' && (
-                     <div className="grid grid-cols-1 gap-4 overflow-visible">
-                        <Sidebar 
-                          model={model} 
-                          setModel={setModel} 
-                          config={config} 
-                          setConfig={(newConfig) => {
-                            setConfig(newConfig);
-                            if (isMobile && newConfig.selectedCharacters && newConfig.selectedCharacters.length > 0) {
-                              changeTab('studio');
-                            }
-                          }} 
-                          view="models"
-                          onBack={handleBack}
-                        />
-                     </div>
-                   )}
+               {activeTab === 'hub' && (
+                 <IntegrationsHub onClose={() => handleBack()} />
+               )}
 
-                   {activeTab === 'actors' && (
-                     <div className="grid grid-cols-1 gap-4 overflow-visible">
-                        <Sidebar 
-                          model={model} 
-                          setModel={setModel} 
-                          config={config} 
-                          setConfig={(newConfig) => {
-                            setConfig(newConfig);
-                            if (isMobile && newConfig.selectedCharacters && newConfig.selectedCharacters.length > 0) {
-                              changeTab('studio');
-                            }
-                          }} 
-                          view="actors"
-                          onBack={handleBack}
-                        />
-                     </div>
-                   )}
+               {activeTab === 'studio' && (
+                 <div className="space-y-4">
+                    <PromptWorkspace 
+                      model={model} 
+                      config={config} 
+                      setConfig={setConfig}
+                      isMobile={true} 
+                      initialMediaType={initialMediaType}
+                      onBack={handleBack}
+                    />
+                 </div>
+               )}
+               
+               {activeTab === 'models' && (
+                 <div className="grid grid-cols-1 gap-4 overflow-visible">
+                    <Sidebar 
+                      model={model} 
+                      setModel={setModel} 
+                      config={config} 
+                      setConfig={(newConfig) => {
+                        setConfig(newConfig);
+                        if (isMobile && newConfig.selectedCharacters && newConfig.selectedCharacters.length > 0) {
+                          changeTab('studio');
+                        }
+                      }} 
+                      view="models"
+                      onBack={handleBack}
+                      onOpenHub={() => changeTab('hub')}
+                    />
+                 </div>
+               )}
 
-                   {activeTab === 'env' && (
-                     <div className="grid grid-cols-1 gap-4 overflow-visible">
-                        <Sidebar 
-                          model={model} 
-                          setModel={setModel} 
-                          config={config} 
-                          setConfig={(newConfig) => {
-                            setConfig(newConfig);
-                            if (isMobile && newConfig.selectedCharacters && newConfig.selectedCharacters.length > 0) {
-                              changeTab('studio');
-                            }
-                          }} 
-                          view="env"
-                          onBack={handleBack}
-                        />
-                     </div>
-                   )}
-                </motion.div>
-             </AnimatePresence>
-          </div>
-        )}
+               {activeTab === 'actors' && (
+                 <div className="grid grid-cols-1 gap-4 overflow-visible">
+                    <Sidebar 
+                      model={model} 
+                      setModel={setModel} 
+                      config={config} 
+                      setConfig={(newConfig) => {
+                        setConfig(newConfig);
+                        if (isMobile && newConfig.selectedCharacters && newConfig.selectedCharacters.length > 0) {
+                          changeTab('studio');
+                        }
+                      }} 
+                      view="actors"
+                      onBack={handleBack}
+                      onOpenHub={() => changeTab('hub')}
+                    />
+                 </div>
+               )}
+
+               {activeTab === 'env' && (
+                 <div className="grid grid-cols-1 gap-4 overflow-visible">
+                    <Sidebar 
+                      model={model} 
+                      setModel={setModel} 
+                      config={config} 
+                      setConfig={(newConfig) => {
+                        setConfig(newConfig);
+                        if (isMobile && newConfig.selectedCharacters && newConfig.selectedCharacters.length > 0) {
+                          changeTab('studio');
+                        }
+                      }} 
+                      view="env"
+                      onBack={handleBack}
+                      onOpenHub={() => changeTab('hub')}
+                    />
+                 </div>
+               )}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </main>
 
       {/* Mobile Bottom Navigation */}
@@ -288,14 +344,16 @@ export default function App() {
       {/* Footer - Desktop Only */}
       {!isMobile && (
         <footer className="px-6 py-4 flex justify-between items-center text-[10px] text-zinc-500 font-mono shrink-0 border-t border-zinc-900">
-          <div className="flex space-x-6 uppercase tracking-widest">
+          <div className="flex space-x-6 space-x-reverse h-full items-center">
             <span>الإصدار: v2.5.0 مستقر</span>
+            <div className="w-px h-3 bg-zinc-800 mx-4" />
             <span>مساحة العمل: احترافية</span>
+            <div className="w-px h-3 bg-zinc-800 mx-4" />
             <span>المستخدم: هيتلر سلطان</span>
           </div>
-          <div className="flex space-x-4 items-center">
-            <span className="text-blue-500/60 font-bold uppercase">رخصة المؤسسات</span>
-            <div className="w-1 h-3 bg-zinc-800"></div>
+          <div className="flex space-x-4 space-x-reverse items-center">
+            <span className="text-blue-500/60 font-bold uppercase tracking-widest">رخصة المؤسسات للمحترفين</span>
+            <div className="w-px h-3 bg-zinc-800"></div>
             <span className="text-zinc-600">© 2026 مختبرات الذكاء الاصطناعي</span>
           </div>
         </footer>

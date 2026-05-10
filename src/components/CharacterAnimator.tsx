@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Character, ShotConfig } from '../types';
-import { Activity, Clock, MapPin, Zap, Box, Image as ImageIcon } from 'lucide-react';
+import { Activity, Clock, MapPin, Zap, Box, Image as ImageIcon, Loader2, Sparkles } from 'lucide-react';
 import { Avatar3D } from './Avatar3D';
 
 interface CharacterAnimatorProps {
@@ -50,7 +50,32 @@ export const CharacterAnimator: React.FC<CharacterAnimatorProps> = ({
 }) => {
   const [blink, setBlink] = useState(false);
   const [is3D, setIs3D] = useState(character.style === '3d-animation' || !!character.vrmUrl);
+  const [isSadTalkerGenerating, setIsSadTalkerGenerating] = useState(false);
+  const [sadTalkerVideo, setSadTalkerVideo] = useState<string | null>(null);
   const currentEnv = ENVIRONMENTS[config.environment as keyof typeof ENVIRONMENTS] || ENVIRONMENTS.studio;
+
+  const handleSadTalkerRender = async () => {
+    setIsSadTalkerGenerating(true);
+    try {
+      const response = await fetch('/api/generate-talking-head', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          imagePath: character.avatar,
+          audioPath: 'voice.wav', // Simulated
+          characterId: character.id
+        })
+      });
+      const data = await response.json();
+      if (data.status === 'success') {
+        setSadTalkerVideo(data.videoUrl);
+      }
+    } catch (error) {
+      console.error("SadTalker Render Error:", error);
+    } finally {
+      setIsSadTalkerGenerating(false);
+    }
+  };
 
   // Auto-blinking logic
   useEffect(() => {
@@ -69,6 +94,27 @@ export const CharacterAnimator: React.FC<CharacterAnimatorProps> = ({
           lipSyncLevel={lipSyncLevel} 
           emotion={config.emotion || 'neutral'}
         />
+      ) : sadTalkerVideo ? (
+        <div className="relative w-full h-full">
+           <video 
+             src={sadTalkerVideo} 
+             autoPlay 
+             loop 
+             muted={lipSyncLevel === 0}
+             className="w-full h-full object-cover"
+           />
+           <div className="absolute inset-0 bg-blue-500/5 pointer-events-none" />
+           <div className="absolute top-4 right-4 bg-emerald-500/20 backdrop-blur-md px-3 py-1 rounded-full border border-emerald-500/30 flex items-center gap-2">
+              <Activity className="w-3 h-3 text-emerald-400" />
+              <span className="text-[8px] font-black text-emerald-400 uppercase tracking-widest">SadTalker_Neural_Output</span>
+           </div>
+           <button 
+             onClick={() => setSadTalkerVideo(null)}
+             className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-zinc-900/80 hover:bg-zinc-800 px-4 py-2 rounded-full text-[10px] font-black uppercase text-zinc-400 border border-zinc-800/50 backdrop-blur-md transition-all pointer-events-auto"
+           >
+             Exit Neural Render
+           </button>
+        </div>
       ) : (
         <>
           {/* Dynamic Background */}
@@ -136,38 +182,74 @@ export const CharacterAnimator: React.FC<CharacterAnimatorProps> = ({
                 />
               </motion.div>
 
-              {/* Neural Lip Sync Module */}
-              <div className="absolute bottom-[23%] left-1/2 -translate-x-1/2 w-20 h-10 flex items-center justify-center">
-                <motion.div
-                  animate={{
-                    scaleY: lipSyncLevel * 3.8 + 0.05,
-                    scaleX: 1 + lipSyncLevel * 0.25,
-                    opacity: lipSyncLevel > 0.05 ? 1 : 0
-                  }}
-                  className="w-14 h-6 bg-black rounded-[50%] border-b border-rose-500/10 shadow-[0_5px_15px_rgba(0,0,0,0.8)] overflow-hidden relative"
-                >
+              {/* Neural Lip Sync Module - Enhanced for Production */}
+              <div className="absolute bottom-[23%] left-1/2 -translate-x-1/2 w-24 h-12 flex items-center justify-center pointer-events-none">
+                <div className="relative w-full h-full flex items-center justify-center">
                   <motion.div
                     animate={{
-                      y: lipSyncLevel * -1.5,
-                      opacity: lipSyncLevel > 0.15 ? 0.9 : 0,
+                      scaleY: lipSyncLevel * 4.2 + 0.05,
+                      scaleX: 1 + lipSyncLevel * 0.35,
+                      opacity: lipSyncLevel > 0.02 ? 1 : 0,
+                      filter: `blur(${lipSyncLevel > 0.5 ? '1px' : '0.4px'})`
                     }}
-                    className="absolute top-0 left-1/2 -translate-x-1/2 w-11 h-2.5 bg-gradient-to-b from-white to-zinc-200 rounded-b-md blur-[0.3px] z-20 border-x border-zinc-300/20"
-                  />
-                  <motion.div
-                    animate={{
-                      opacity: lipSyncLevel > 0.3 ? 0.7 : 0,
-                      scale: 0.8 + lipSyncLevel * 0.2
-                    }}
-                    className="absolute inset-0 bg-gradient-to-b from-red-950 to-rose-950 rounded-full blur-[2px] z-10"
-                  />
-                  <motion.div
-                    animate={{
-                      y: lipSyncLevel * 1.5,
-                      opacity: lipSyncLevel > 0.5 ? 0.5 : 0,
-                    }}
-                    className="absolute bottom-0 left-1/2 -translate-x-1/2 w-9 h-1.5 bg-white/40 rounded-t-md blur-[0.8px] z-20"
-                  />
-                </motion.div>
+                    className="w-16 h-7 bg-zinc-950 rounded-[50%] border-b-2 border-rose-600/30 shadow-[0_8px_20px_rgba(0,0,0,0.9)] overflow-hidden relative"
+                  >
+                    {/* Upper Teeth Area */}
+                    <motion.div
+                      animate={{
+                        y: lipSyncLevel * -2.5,
+                        opacity: lipSyncLevel > 0.1 ? 0.95 : 0,
+                      }}
+                      className="absolute top-0 left-1/2 -translate-x-1/2 w-12 h-3 bg-gradient-to-b from-white via-zinc-100 to-zinc-300 rounded-b-lg blur-[0.2px] z-20 border-x border-zinc-400/20 shadow-inner"
+                    />
+                    
+                    {/* Inner Throat Glow */}
+                    <motion.div
+                      animate={{
+                        opacity: lipSyncLevel > 0.25 ? 0.8 : 0,
+                        scale: 0.7 + lipSyncLevel * 0.4
+                      }}
+                      className="absolute inset-0 bg-gradient-to-b from-rose-950 to-black rounded-full blur-[3px] z-10"
+                    />
+
+                    {/* Tongue/Lower Mouth Details */}
+                    <motion.div
+                      animate={{
+                        y: lipSyncLevel * 2,
+                        opacity: lipSyncLevel > 0.4 ? 0.6 : 0,
+                        scaleX: 0.9 + lipSyncLevel * 0.1
+                      }}
+                      className="absolute bottom-0 left-1/2 -translate-x-1/2 w-10 h-2 bg-rose-900/60 rounded-t-full blur-[1px] z-20 shadow-[0_-2px_10px_rgba(225,29,72,0.2)]"
+                    />
+                  </motion.div>
+
+                  {/* Feature Label Overlay */}
+                  <AnimatePresence>
+                    {lipSyncLevel > 0.05 && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 5 }}
+                        className="absolute -bottom-8 bg-blue-600/20 backdrop-blur-md px-2 py-0.5 rounded border border-blue-500/30 flex items-center gap-1.5"
+                      >
+                         <div className="w-1 h-1 bg-emerald-400 rounded-full animate-pulse" />
+                         <span className="text-[7px] font-black text-blue-400 uppercase tracking-widest whitespace-nowrap">Neural_Lip_Sync_v4</span>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  {/* Active Indicator Pulse */}
+                  <AnimatePresence>
+                    {lipSyncLevel > 0.1 && (
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.5 }}
+                        animate={{ opacity: [0.1, 0.2, 0.1], scale: [1, 1.3, 1] }}
+                        exit={{ opacity: 0 }}
+                        className="absolute inset-0 bg-blue-500/5 rounded-full blur-3xl -z-10"
+                      />
+                    )}
+                  </AnimatePresence>
+                </div>
               </div>
 
               {/* Eye Blinking */}
@@ -214,6 +296,23 @@ export const CharacterAnimator: React.FC<CharacterAnimatorProps> = ({
                   Switch to {is3D ? '2D Cinematic' : 'Hyper-3D'}
                 </span>
              </button>
+
+             {!is3D && (
+               <button 
+                 onClick={handleSadTalkerRender}
+                 disabled={isSadTalkerGenerating}
+                 className="flex items-center gap-2 px-3 py-1 bg-blue-600/20 hover:bg-blue-600/40 rounded-full border border-blue-500/30 transition-all group disabled:opacity-50 pointer-events-auto"
+               >
+                 {isSadTalkerGenerating ? (
+                   <Loader2 className="w-3 h-3 text-blue-400 animate-spin" />
+                 ) : (
+                   <Sparkles className="w-3 h-3 text-blue-400 group-hover:rotate-12 transition-transform" />
+                 )}
+                 <span className="text-[8px] font-bold text-blue-300 uppercase tracking-tighter">
+                   {isSadTalkerGenerating ? 'Rendering...' : 'SadTalker Neural Render'}
+                 </span>
+               </button>
+             )}
            </div>
            
            <div className="text-[8px] font-mono text-zinc-500 flex items-center gap-2 bg-black/40 px-2 py-1 rounded">

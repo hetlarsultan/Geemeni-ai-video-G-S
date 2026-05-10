@@ -1,14 +1,15 @@
 import React from 'react';
-import { ImageIcon, Film, Mic2, PlayCircle, FolderHeart, Settings, Sparkles, Smartphone, MessageSquare, Music, BarChart3, Brain, UserRound, Clapperboard, Zap, UserCheck } from 'lucide-react';
+import { ImageIcon, Film, Mic2, PlayCircle, FolderHeart, Settings, Sparkles, Smartphone, MessageSquare, Music, BarChart3, Brain, UserRound, Clapperboard, Zap, UserCheck, Globe } from 'lucide-react';
 import { motion } from 'motion/react';
 import { FIXED_CHARACTERS } from '../constants';
 
 interface DashboardProps {
   onSelectAction: (action: 'image' | 'video' | 'tts' | 'img2vid' | 'chat' | 'music' | 'analysis' | 'reasoning' | 'character' | 'movie' | 'animated-image') => void;
   onOpenGallery: () => void;
+  onOpenHub: () => void;
 }
 
-const Dashboard = React.memo(({ onSelectAction, onOpenGallery }: DashboardProps) => {
+const Dashboard = React.memo(({ onSelectAction, onOpenGallery, onOpenHub }: DashboardProps) => {
   const actions = [
     { id: 'movie', label: 'إنتاج الدراما', icon: Clapperboard, color: 'bg-purple-600', description: 'Story to Action Movie' },
     { id: 'video', label: 'فيديو سريع', icon: Film, color: 'bg-emerald-600', description: 'Single Shot Generation' },
@@ -94,7 +95,7 @@ const Dashboard = React.memo(({ onSelectAction, onOpenGallery }: DashboardProps)
       {/* Secondary Actions */}
       <div className="px-2 space-y-4">
         <h3 className="text-[10px] font-black uppercase text-zinc-500 tracking-[0.2em] ml-2">Quick_Navigation</h3>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
            <button 
              onClick={onOpenGallery}
              className="bento-card p-4 flex items-center gap-3 hover:bg-zinc-900 transition-colors"
@@ -104,6 +105,17 @@ const Dashboard = React.memo(({ onSelectAction, onOpenGallery }: DashboardProps)
               </div>
               <span className="text-[11px] font-bold uppercase">المعرض</span>
            </button>
+
+           <button 
+             onClick={onOpenHub}
+             className="bento-card p-4 flex items-center gap-3 border-blue-500/20 bg-blue-500/5 hover:bg-blue-600/10 transition-colors"
+           >
+              <div className="w-8 h-8 bg-blue-600/20 rounded-lg flex items-center justify-center">
+                 <Globe className="w-4 h-4 text-blue-400" />
+              </div>
+              <span className="text-[11px] font-bold uppercase text-blue-400">مركز التكامل</span>
+           </button>
+
            <button 
              className="bento-card p-4 flex items-center gap-3 hover:bg-zinc-900 transition-colors"
            >
