@@ -176,7 +176,7 @@ export async function* chatWithGeminiStream(
   useSearch: boolean = false,
   modelId: string = "gemini-3-flash-preview"
 ) {
-  if (modelId === 'chatgpt' || modelId === 'deepseek') {
+  if (modelId === 'chatgpt' || modelId === 'deepseek' || modelId === 'meta-ai') {
     const res = await callThirdPartyModel(modelId, message);
     yield res;
     return;
@@ -204,6 +204,22 @@ export async function* chatWithGeminiStream(
 }
 
 async function callThirdPartyModel(model: string, prompt: string): Promise<string> {
+  // Check for Meta AI (Llama) which goes through our server proxy for direct access
+  if (model === 'meta-ai') {
+    try {
+      const response = await fetch('/api/chat/meta', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: [{ role: 'user', content: prompt }] })
+      });
+      const data = await response.json();
+      if (data.error) return `[Meta AI Error]: ${data.error}`;
+      return data.choices[0].message.content || "No response content.";
+    } catch (err) {
+      return `[CONNECT_ERROR]: Failed to reach local Meta AI proxy.`;
+    }
+  }
+
   const apiKey = model === 'chatgpt' ? import.meta.env.VITE_OPENAI_API_KEY : import.meta.env.VITE_DEEPSEEK_API_KEY;
   const baseUrl = model === 'chatgpt' ? 'https://api.openai.com/v1/chat/completions' : 'https://api.deepseek.com/chat/completions';
   const modelName = model === 'chatgpt' ? 'gpt-4o' : 'deepseek-chat';

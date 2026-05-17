@@ -43,6 +43,39 @@ async function startServer() {
     }, 4500);
   });
 
+  // Meta AI (Llama) Direct Integration Endpoint
+  app.post("/api/chat/meta", async (req, res) => {
+    const { messages, model = "llama-3-70b" } = req.body;
+    const apiKey = process.env.VITE_META_AI_API_KEY;
+
+    if (!apiKey) {
+      return res.status(401).json({ error: "Meta AI API Key is missing. Please add VITE_META_AI_API_KEY in Settings." });
+    }
+
+    try {
+      // Direct integration with Llama via a compatible provider (e.g. Groq, OpenRouter, etc.)
+      // For this implementation, we use a generic completion structure
+      const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${apiKey}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          model: model === "llama-3-70b" ? "llama3-70b-8192" : "llama3-8b-8192",
+          messages: messages,
+          temperature: 0.7,
+        })
+      });
+
+      const data = await response.json();
+      res.json(data);
+    } catch (error) {
+      console.error("[Meta AI Error]:", error);
+      res.status(500).json({ error: "Failed to communicate with Meta AI service." });
+    }
+  });
+
   // Vite integration
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({

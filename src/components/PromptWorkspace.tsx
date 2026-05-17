@@ -2457,6 +2457,11 @@ const PromptWorkspace = React.memo(
                 label: "DeepSeek",
                 icon: <Brain className="w-3 h-3 text-purple-400" />,
               },
+              {
+                id: "meta-ai",
+                label: "Meta AI",
+                icon: <Globe className="w-3 h-3 text-cyan-400" />,
+              },
             ].map((m) => (
               <button
                 key={m.id}
@@ -2468,7 +2473,12 @@ const PromptWorkspace = React.memo(
                 }`}
               >
                 {m.icon}
-                <span className="text-[8px] font-black">{m.label}</span>
+                <div className="flex flex-col items-center">
+                  <span className="text-[8px] font-black">{m.label}</span>
+                  {m.id === 'meta-ai' && (
+                    <span className="text-[5px] text-cyan-500 font-bold tracking-widest uppercase">Direct_Online</span>
+                  )}
+                </div>
               </button>
             ))}
           </div>
