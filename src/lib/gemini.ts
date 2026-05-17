@@ -59,7 +59,7 @@ export async function optimizePrompt(userPrompt: string, modelType: string): Pro
   try {
     const rai = await getRestrictedAI();
     const response = await rai.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: "gemini-2.0-flash-exp",
       contents: userPrompt,
       config: {
         systemInstruction,
@@ -106,7 +106,7 @@ export async function scriptToPrompts(script: string, modelType: string): Promis
   try {
     const rai = await getRestrictedAI();
     const response = await rai.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: "gemini-2.0-flash-exp",
       contents: script,
       config: {
         systemInstruction,
@@ -145,7 +145,7 @@ export async function chatWithGemini(
   history: any[] = [], 
   useThinking: boolean = false,
   useSearch: boolean = false,
-  modelId: string = "gemini-3-flash-preview"
+  modelId: string = "gemini-2.0-flash-exp"
 ): Promise<string> {
   if (modelId === 'chatgpt' || modelId === 'deepseek') {
     return callThirdPartyModel(modelId, message);
@@ -174,7 +174,7 @@ export async function* chatWithGeminiStream(
   message: string, 
   useThinking: boolean = false,
   useSearch: boolean = false,
-  modelId: string = "gemini-3-flash-preview"
+  modelId: string = "gemini-2.0-flash-exp"
 ) {
   if (modelId === 'chatgpt' || modelId === 'deepseek' || modelId === 'meta-ai') {
     const res = await callThirdPartyModel(modelId, message);
@@ -306,11 +306,11 @@ export async function generateVeoVideo(prompt: string): Promise<string> {
     const rai = await getRestrictedAI();
     let operation;
     
-    // Attempt 1: Veo 3.1 Pro (High Quality)
+    // Attempt 1: Veo 2.0 Pro (High Quality)
     try {
       console.log("Attempting Veo High-Quality...");
       operation = await rai.models.generateVideos({
-        model: 'veo-1.0-generate-001', // Updated to more realistic standard model name
+        model: 'veo-2.0-generate-001', // Updated to the correct modern model name
         prompt,
         config: {
           numberOfVideos: 1,
@@ -319,12 +319,12 @@ export async function generateVeoVideo(prompt: string): Promise<string> {
         }
       });
     } catch (proError: any) {
-      console.warn("Veo Pro failed, trying Lite/Preview equivalent...", proError);
+      console.warn("Veo Pro failed, trying standard/preview equivalent...", proError);
       
-      // Attempt 2: Veo Preview / Lite
+      // Attempt 2: Veo Standard / Preview
       try {
         operation = await rai.models.generateVideos({
-          model: 'veo-001', // Fallback to base model ID
+          model: 'veo-1.1-generate-001', // Fallback to versioned base model
           prompt,
           config: {
             numberOfVideos: 1,
@@ -380,7 +380,7 @@ export async function generateLyriaMusic(prompt: string): Promise<string> {
     console.log("Attempting Lyria Music Generation:", prompt);
     const rai = await getRestrictedAI();
     const response = await rai.models.generateContentStream({
-      model: "lyria-clip-001", // Updated to a more standard Lyria model ID
+      model: "lyria-1.0-clip-001", // Updated to a more standard Lyria model ID
       contents: prompt,
       config: {
         // Adding Explicit Modality for Gen 3 compatibility
@@ -595,7 +595,7 @@ export async function analyzeVideo(videoUri: string, prompt: string): Promise<st
   }
   const rai = await getRestrictedAI();
   const response = await rai.models.generateContent({
-    model: "gemini-3-flash-preview",
+    model: "gemini-2.0-flash-exp",
     contents: {
       parts: [
         { text: `Analyze this video content: ${videoUri}. User Request: ${prompt}` }

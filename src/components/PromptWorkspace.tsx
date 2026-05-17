@@ -484,7 +484,7 @@ const PromptWorkspace = React.memo(
       initialMediaType || "video",
     );
     const [selectedModel, setSelectedModel] = useState<string>(
-      "gemini-3-flash-preview",
+      "gemini-2.0-flash-exp",
     );
     const [useSearch, setUseSearch] = useState(false);
     const [useThinking, setUseThinking] = useState(false);
@@ -2443,7 +2443,7 @@ const PromptWorkspace = React.memo(
           <div className="grid grid-cols-3 gap-2">
             {[
               {
-                id: "gemini-3-flash-preview",
+                id: "gemini-2.0-flash-exp",
                 label: "Gemini 3",
                 icon: <Sparkles className="w-3 h-3 text-blue-400" />,
               },
